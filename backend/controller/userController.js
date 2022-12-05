@@ -3,35 +3,54 @@ const catchAsyncErrors = require("../middleware/catchAsyncErrors");
 const User = require("../model/userModel");
 const sendToken = require("../utilities/jwToken");
 const sendEmail = require("../utilities/sendEmail");
-const cloudinary = require("cloudinary");
+// const cloudinary = require("cloudinary");
+const cloudinary = require('cloudinary')
 
 
+// // Register a User
+// exports.registerUser = catchAsyncErrors(async (req, res, next) => {
+//     const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
+//         folder: "avatars",
+//         width: 150,
+//         crop: "scale",
+//     });
+//     const { name, email, password } = req.body;
+
+//     const user = await User.create({
+//         name,
+//         email,
+//         password,
+//         avatar: {
+//             public_id: myCloud.public_id,
+//             url: myCloud.secure_url,
+//         }
+//     });
+//     const token = user.getJWTToken();//usermodel theke jweb token function call
+//     sendToken(user, 201, res);
+// });
 // Register a User
 exports.registerUser = catchAsyncErrors(async (req, res, next) => {
-    // const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
-    //     folder: "avatars",
-    //     width: 150,
-    //     crop: "scale",
-    // });
-
-    const { name, email, password } = req.body;
-
-    const user = await User.create({
-        name,
-        email,
-        password,
-        // avatar: {
-        //     public_id: myCloud.public_id,
-        //     url: myCloud.secure_url,
-        // },
+    const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
+      folder: "avatars",
+      width: 150,
+      crop: "scale",
     });
-    const token = user.getJWTToken();//usermodel theke jweb token function call
+    
+  
+    const { name, email, password } = req.body;
+  
+    const user = await User.create({
+      name,
+      email,
+      password,
+      avatar: {
+        public_id: myCloud.public_id,
+        url: myCloud.secure_url,
+      },
+    });
+  
     sendToken(user, 201, res);
-    // res.status(201).json({
-    //     status: true,
-    //     token,
-    // });
-});
+  });
 
 // Login User
 exports.loginUser = catchAsyncErrors(async (req, res, next) => {
@@ -191,23 +210,18 @@ exports.updateProfile = catchAsyncErrors(async (req, res, next) => {
 
     if (req.body.avatar !== "") {
         const user = await User.findById(req.user.id);
-
         const imageId = user.avatar.public_id;
-
         await cloudinary.v2.uploader.destroy(imageId);
-
         const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
             folder: "avatars",
             width: 150,
             crop: "scale",
         });
-
         newUserData.avatar = {
             public_id: myCloud.public_id,
             url: myCloud.secure_url,
         };
     }
-
     const user = await User.findByIdAndUpdate(req.user.id, newUserData, {
         new: true,
         runValidators: true,
